@@ -37,7 +37,12 @@ for pdf in pdfList:
     cell = 'A' + str(cellrow)
     worksheet.write(cell, pdf)
 
+#Compare specs
+regexAttributePattern = r"[a-zA-z].+?(?=\t)"
+
 
 for pdf in openPDFsList: #close everything
     pdf.close()
 workbook.close()
+
+#Diff command in linux?
