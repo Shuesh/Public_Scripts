@@ -44,8 +44,8 @@ for val in value_array[0:numCols-1]:
 #Determined the order of second/third harmonic table
 #Next we need to build up dictionaries to associate values
 
-second_element_dict = {:}
-second_marconi_dict = {:}
-third_element_dict = {:}
-third_marconi_dict = {:}
+# second_element_dict = {:}
+# second_marconi_dict = {:}
+# third_element_dict = {:}
+# third_marconi_dict = {:}
 
