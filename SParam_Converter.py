@@ -1,7 +1,6 @@
 import re
 import numpy as np
 import matplotlib.pyplot as plt
-import asyncio
 
 from numpy.core.defchararray import isdigit
 
@@ -9,7 +8,7 @@ s_parameter_enum = 2
 freq_unit = 'MHz'
 
 def Main():
-    input_format, input_headings, sparam_list = Input_to_list(input('snp full path:\n'))
+    input_format, input_headings, sparam_list = Input_to_list(input('snp full path:\n').strip())
     attenuation_magnitudes = Attenuation_snp(input_headings, input_format[2], sparam_list)
     Plot_attenuation(attenuation_magnitudes)
     
@@ -17,12 +16,12 @@ def Main():
     high_freq = None
     while(type(low_freq) is not float):
         try: 
-            low_freq = float(input(f'Low end of frequency range (in {freq_unit}): '))
+            low_freq = float(input(f'Low end of frequency range in {freq_unit} (e notation is valid ex: 4.8e9): '))
         except ValueError:
             print('That wasn\'t a valid number. Please try again\n')
     while(type(high_freq) is not float):
         try:
-            high_freq = float(input(f'High end of frequency range (in {freq_unit}): '))
+            high_freq = float(input(f'High end of frequency range in {freq_unit} (e notation is valid ex: 4.8e9): '))
         except ValueError:
             print('That wasn\'t a valid number. Please try again\n')
     Range_stats(low_freq, high_freq, attenuation_magnitudes)
@@ -32,6 +31,7 @@ def Input_to_list(path):
     #find_start_pattern = r'^(?![#|!|\s]).*/gm'
     #find_start_reg = re.compile(find_start_pattern)
     start_data = False
+    has_headings = False
     input_list = []
 
     with open (path, 'rt') as input_text:
@@ -44,10 +44,23 @@ def Input_to_list(path):
                 input_list.append(line.strip())
             else:                           #line starts with a ! after finding the # (appears to only occur once, only in some files)
                 input_sparam_headings = line
+                has_headings = True
 
-    input_format = re.findall( r'(?<=\s)[\d\w]*', input_sparam_format.strip())
-    input_headings = re.findall(r'(?<=\s\s)[\d\w]*(?=\s)|(?<=\s)[\d\w]*(?=\s\s)|(?<=\s)[\d\w]*(?=$)', input_sparam_headings.strip())
-    
+    input_format = re.findall( r'(?<=\s)[\d\w]+', input_sparam_format.strip())
+    if (has_headings):
+        input_headings = re.findall(r'(?<=\s\s)[\d\w]*(?=\s)|(?<=\s)[\d\w]*(?=\s\s)|(?<=\s)[\d\w]*(?=$)', input_sparam_headings.strip())
+    else:
+        if (path[-2] == '1'):
+            input_headings = ['Freq','S11','S11_2']
+        elif (path[-2] == '2'):
+            input_headings = ['Freq','S11','S11_2','S21','S21_2','S12','S12_2','S22','S22_2']
+        elif (path[-2] == '3'):
+            input_headings = ['Freq','S11','S11_2','S21','S21_2','S31','S31_2','S12','S12_2','S22','S22_2','S32','S32_2','S13','S13_2','S23','S23_2','S33','S33_2']
+        elif (path[-2] == '4'):
+            input_headings = ['Freq','S11','S11_2','S21','S21_2','S31','S31_2','S41','S41_2','S12','S12_2','S22','S22_2','S32','S32_2','S42','S42_2','S13','S13_2','S23','S23_2','S33','S33_2','S43','S43_2','S14','S14_2','S24','S24_2','S34','S34_2','S44','S44_2']
+        elif (path[-2] == '5'):
+            input_headings = ['Freq','S11','S11_2','S21','S21_2','S31','S31_2','S41','S41_2','S51','S51_2','S12','S12_2','S22','S22_2','S32','S32_2','S42','S42_2','S52','S52_2','S13','S13_2','S23','S23_2','S33','S33_2','S43','S43_2','S53','S53_2','S14','S14_2','S24','S24_2','S34','S34_2','S44','S44_2','S54','S54_2','S15','S15_2','S25','S25_2','S35','S35_2','S45','S45_2','S55','S55_2']
+
     #find number of values per line
     find_values_pattern = re.compile(r'-?\d+\.\d+e-\d+|-?\d+\.\d+|\-?\d+')
     find_values_match = re.findall(find_values_pattern, input_list[2])
@@ -66,36 +79,31 @@ def Input_to_list(path):
 def Attenuation_snp(headings, snp_format, sparameters): #j at the end of a number is complex/imaginary
     number_of_ports = np.sqrt(len(headings)) - 1   #input/output port order is not consistent. Check headings
     
-    if (snp_format == 'RI'): #Real/Imaginary
+    if (snp_format.upper() == 'RI'): #Real/Imaginary
         RI_magnitude = np.zeros((int((len(headings)-1)/2 + 1),len(sparameters))) #Access as follows: [S-Parameter (enumerated) + 1 for a freq column][line #]
         for line,measurement in enumerate(sparameters):
             RI_magnitude[0][line] = measurement[0]
             for index in range(1,len(measurement)-1,2):
                 RI_magnitude[int(np.ceil(index/2))][line] = 20*np.log10(np.sqrt(measurement[index]**2 + measurement[index+1]**2))
-
-        #RI_magnitude = np.zeros((len(sparameters),int((len(headings)-1)/2 + 1))) #Access as follows: [line #][S-Parameter (enumerated) + 1 for a freq column]
-        #for line,measurement in enumerate(sparameters):
-        #    RI_magnitude[line][0] = measurement[0]
-        #    for index in range(1,len(measurement)-1,2):
-        #        RI_magnitude[line][int(np.ceil(index/2))] = 20*np.log10(np.sqrt(measurement[index]**2 + measurement[index+1]**2))
         return RI_magnitude
-    elif (snp_format == 'MA'): #Magnitude/Angle
-        MA_magnitude = np.zeros((len(sparameters),int((len(headings)-1)/2 + 1)))
+    elif (snp_format.upper() == 'MA'): #Magnitude/Angle
+        MA_magnitude = np.zeros((int((len(headings)-1)/2 + 1),len(sparameters)))
         for line,measurement in enumerate(sparameters):
-            MA_magnitude[line][0] = measurement[0]
+            MA_magnitude[0][line] = measurement[0]
             for index in range(1,len(measurement)-1,2):
-                MA_magnitude[line][int(np.ceil(index/2))] = 20*np.log10(measurement[index])
+                MA_magnitude[int(np.ceil(index/2))][line] = 20*np.log10(measurement[index])
         return MA_magnitude
-    elif (snp_format == 'DB'): #Magnitude in Decibels/Phase
-        DB_magnitude = np.zeros((len(sparameters),int((len(headings)-1)/2 + 1)))
+    elif (snp_format.upper() == 'DB'): #Magnitude in Decibels/Phase
+        DB_magnitude = np.zeros((int((len(headings)-1)/2 + 1),len(sparameters)))
         for line,measurement in enumerate(sparameters):
-            DB_magnitude[line][0] = measurement[0]
+            DB_magnitude[0][line] = measurement[0]
             for index in range(1,len(measurement)-1,2):
-                DB_magnitude[line][int(np.ceil(index/2))] = measurement[index]
+                DB_magnitude[int(np.ceil(index/2))][line] = measurement[index]
         return DB_magnitude
     else:
         print('Format error. Please edit to include one of the following input formats: RI, MA, DB')
     
+#D:\TDK_LPF_Measured\20210914\4800.s2p   
 def Plot_attenuation(sparam_magnitudes):
     #one_port = ['S11']
     #two_port = ['S11','S21','S12','S22']
@@ -140,7 +148,7 @@ def Range_stats(low_freq, high_freq, attenuations):
     dB_avg = dB_total / num_of_indices
     power_avg = 20*np.log10(power_total / num_of_indices)
 
-    print(f'\nStatistics between {low_freq} {freq_unit} and {high_freq} {freq_unit}:\nMin: {min} @ {min_freq} {freq_unit}\nMax: {max} @ {max_freq} {freq_unit}\nAvg of dB Values: {dB_avg}\nAvg of Power Values: {power_avg}')
+    print(f'\nStatistics between {low_freq} {freq_unit} and {high_freq} {freq_unit}:\nMin: {min} @ {min_freq} {freq_unit}\nMax: {max} @ {max_freq} {freq_unit}\nAverage Power: {power_avg}')
 
 
 Main()
