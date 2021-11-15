@@ -1,101 +1,214 @@
+import copy
 
 def solution(map):
-    path_finder(map, 0, 0, 0, len(map), len(map[0]), 0))
+    height = len(map)
+    width = len(map[0])
+    map_copy = copy.deepcopy(map)
+    min_path_length = 9999999
+    empty_array = initialize_array(height,width)
+    path_length = dijkstras_path_finder(map_copy, empty_array, height-1, width-1)
+    if (path_length != None):
+        min_path_length = path_length
+    for row in range(len(map)):
+        for column in range(len(map[0])):
+            if (min_path_length != None and min_path_length == height + width + 1):
+                break
+            if map[row][column] == 1:
+                map_copy = copy.deepcopy(map)
+                map_copy[row][column] = 0
+                empty_array = initialize_array(height,width)
+                path_length = dijkstras_path_finder(map_copy, empty_array, height-1, width-1)
+                if (path_length != None and path_length < min_path_length):
+                    min_path_length = path_length
 
-def path_finder(map):
-    map_height = len(map) - 1
-    map_width = len(map[0]) - 1
-    walls_removed = 0
-    index_x = 0
-    index_y = 0
-    path_length = 0
-    came_from = 'up'
+    print(min_path_length)
 
-    while (index_x < map_width or index_y < map_height):
-        movement = direction(map, index_y, index_x, walls_removed, came_from)
-
-
-
-
-def direction(map, position_y, position_x, walls_removed, came_from):
-    #order goes down, right, left, up
-    step1_array = []
-    #order goes SE, S, E, SW, NE, W, N, NW
-    step2_array = []
-
+def initialize_array(height, width):
+    empty_array = [[['X',False] for i in range(width)] for j in range(height)]
+    return empty_array
     
 
+def dijkstras_path_finder(map, dijkstra_array, location_y, location_x):
+    queue = []
+    dijkstra_array[location_y][location_x][1] = True
+    dijkstra_array[location_y][location_x][0] = 1
+    queue.append([location_y,location_x])
+    while queue:
+        location = queue.pop(0)
+        if location == [0,0]:
+            return dijkstra_array[0][0][0]
+        #Check the location above
+        if location[0] > 0 and dijkstra_array[location[0]-1][location[1]][1] == False:
+            dijkstra_array[location[0]-1][location[1]][1] = True
+            if map[location[0]-1][location[1]] == 0:
+                queue.append([location[0]-1,location[1]])
+                if location[1] < len(map[0])-1 and dijkstra_array[location[0]-1][location[1]+1][0] != 'X':
+                    right = dijkstra_array[location[0]-1][location[1]+1][0]
+                else:
+                    right = 9999999
+                if location[0] <= len(map)-1 and dijkstra_array[location[0]][location[1]][0] != 'X':
+                    down = dijkstra_array[location[0]][location[1]][0]
+                else:
+                    down = 9999999
+                if location[0] > 1 and dijkstra_array[location[0]-2][location[1]][0] != 'X':
+                    up = dijkstra_array[location[0]-2][location[1]][0]
+                else:
+                    up = 9999999
+                if location[1] > 0 and dijkstra_array[location[0]-1][location[1]-1][0] != 'X':
+                    left = dijkstra_array[location[0]-1][location[1]-1][0]
+                else: 
+                    left = 9999999
+                minimum_path = min(right,down,up,left)
+                dijkstra_array[location[0]-1][location[1]][0] = minimum_path + 1
+        #Check the location to the left
+        if location[1] > 0 and dijkstra_array[location[0]][location[1]-1][1] == False:
+            dijkstra_array[location[0]][location[1]-1][1] = True
+            if map[location[0]][location[1]-1] == 0:
+                queue.append([location[0],location[1]-1])
+                if location[1] <= len(map[0])-1 and dijkstra_array[location[0]][location[1]][0] != 'X':
+                    right = dijkstra_array[location[0]][location[1]][0]
+                else:
+                    right = 9999999
+                if location[0] < len(map)-1 and dijkstra_array[location[0]+1][location[1]-1][0] != 'X':
+                    down = dijkstra_array[location[0]+1][location[1]-1][0]
+                else:
+                    down = 9999999
+                if location[0] > 0 and dijkstra_array[location[0]-1][location[1]-1][0] != 'X':
+                    up = dijkstra_array[location[0]-1][location[1]-1][0]
+                else:
+                    up = 9999999
+                if location[1] > 1 and dijkstra_array[location[0]][location[1]-2][0] != 'X':
+                    left = dijkstra_array[location[0]][location[1]-2][0]
+                else: 
+                    left = 9999999
+                minimum_path = min(right,down,up,left)
+                dijkstra_array[location[0]][location[1]-1][0] = minimum_path + 1
+        #Check the location below
+        if location[0] < len(map)-1 and dijkstra_array[location[0]+1][location[1]][1] == False:
+            dijkstra_array[location[0]+1][location[1]][1] = True
+            if map[location[0]+1][location[1]] == 0:
+                queue.append([location[0]+1,location[1]])
+                if location[1] < len(map[0])-1 and dijkstra_array[location[0]+1][location[1]+1][0] != 'X':
+                    right = dijkstra_array[location[0]+1][location[1]+1][0]
+                else:
+                    right = 9999999
+                if location[0] < len(map)-3 and dijkstra_array[location[0]+2][location[1]][0] != 'X':
+                    down = dijkstra_array[location[0]+2][location[1]][0]
+                else:
+                    down = 9999999
+                if location[0] < len(map)-1 and dijkstra_array[location[0]][location[1]][0] != 'X':
+                    up = dijkstra_array[location[0]][location[1]][0]
+                else:
+                    up = 9999999
+                if location[1] > 0 and dijkstra_array[location[0]+1][location[1]-1][0] != 'X':
+                    left = dijkstra_array[location[0]+1][location[1]-1][0]
+                else: 
+                    left = 9999999
+                minimum_path = min(right,down,up,left)
+                dijkstra_array[location[0]+1][location[1]][0] = minimum_path + 1
+        #Check the location to the right
+        if location[1] < len(map[0])-1 and dijkstra_array[location[0]][location[1]+1][1] == False:
+            dijkstra_array[location[0]][location[1]+1][1] = True
+            if map[location[0]][location[1]+1] == 0:
+                queue.append([location[0],location[1]+1])
+                if location[1] <= len(map[0])-3 and dijkstra_array[location[0]][location[1]+2][0] != 'X':
+                    right = dijkstra_array[location[0]][location[1]+2][0]
+                else:
+                    right = 9999999
+                if location[0] < len(map)-2 and dijkstra_array[location[0]+1][location[1]+1][0] != 'X':
+                    down = dijkstra_array[location[0]+1][location[1]+1][0]
+                else:
+                    down = 9999999
+                if location[0] > 0 and dijkstra_array[location[0]-1][location[1]+1][0] != 'X':
+                    up = dijkstra_array[location[0]-1][location[1]+1][0]
+                else:
+                    up = 9999999
+                if location[1] >= 0 and dijkstra_array[location[0]][location[1]][0] != 'X':
+                    left = dijkstra_array[location[0]][location[1]][0]
+                else: 
+                    left = 9999999
+                minimum_path = min(right,down,up,left)
+                dijkstra_array[location[0]][location[1]+1][0] = minimum_path + 1
 
 
-
-# . . 2 . .
-# . 2 1 2 .
-# 2 1 X 1 2
-# . 2 1 2 .
-# . . 2 . .
-
-
-
-
-#Height and width from 2-20
-
-#Start
-# 0 1 1 0
-# 0 0 0 1
-# 1 1 0 0
-# 1 1 1 0
-#       Finish
+# solution([
+#     [0,1,1,0],
+#     [0,0,0,1],
+#     [1,1,0,0],
+#     [1,1,1,0]
+# ])
 # Answer: 7
 
 
-#Start
-# 0 0 0 0 0 0
-# 1 1 1 1 1 0
-# 0 0 0 0 0 0
-# 0 1 1 1 1 1
-# 0 1 1 1 1 1
-# 0 0 0 0 0 0
-#           Finish
+# solution([
+#     [0,0,0,0,0,0],
+#     [1,1,1,1,1,0],
+#     [0,0,0,0,0,0],
+#     [0,1,1,1,1,1],
+#     [0,1,1,1,1,1],
+#     [0,0,0,0,0,0]
+# ])
 # Answer: 11
 
+solution([
+    [0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0],
+    [0,1,0,1,0,1,1,1,1,1,1,1,0,1,1,0,1,0,1,0],
+    [0,1,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0],
+    [0,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0],
+    [0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,1,0],
+    [0,1,0,1,1,1,0,1,1,1,0,1,0,1,1,1,1,0,1,0],
+    [0,1,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1,0],
+    [0,1,0,1,0,1,0,0,1,1,1,1,1,1,0,0,1,0,1,0],
+    [0,1,0,1,0,1,1,0,1,0,0,0,0,0,0,1,1,0,1,0],
+    [0,1,0,1,0,1,0,0,1,0,1,0,0,1,0,0,1,0,1,0],
+    [0,1,0,1,0,1,1,1,1,0,1,1,1,1,1,0,1,0,1,0],
+    [0,1,0,1,0,0,0,1,0,0,1,0,0,0,0,0,1,0,1,0],
+    [0,1,0,1,1,0,1,1,1,0,1,1,0,1,1,1,1,0,1,0],
+    [0,1,0,1,0,0,0,1,0,0,1,0,0,0,1,0,1,0,1,0],
+    [0,0,0,1,0,1,0,0,0,0,1,0,1,0,0,0,0,0,1,0]
+])
+# Answer: 66
 
+# solution([
+#     [0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0],
+#     [0,1,0,1,1,0,1,0,1,0,0,0,1,0,0,0],
+#     [0,1,0,0,1,1,1,0,0,1,0,1,0,1,0,1],
+#     [0,1,0,0,0,0,1,1,0,0,1,0,0,0,1,0],
+#     [1,1,1,1,0,1,1,0,0,1,0,0,0,1,0,0],
+#     [0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0],
+#     [0,1,1,1,1,1,1,1,0,0,0,1,0,0,0,0],
+#     [0,0,0,0,0,0,1,0,0,0,1,1,1,1,1,0],
+#     [1,1,1,1,1,0,1,0,0,1,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+#     [0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1],
+#     [0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+#     [0,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0],
+#     [0,1,0,0,1,1,0,0,1,1,1,1,1,0,1,1],
+#     [0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,0],
+#     [0,0,1,0,0,0,0,0,1,0,1,0,1,1,1,1],
+#     [0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0],
+#     [1,0,1,0,0,0,1,0,0,0,1,0,1,1,0,1],
+#     [0,0,0,1,0,0,1,0,0,0,1,0,1,0,0,0],
+#     [0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0]
+# ])
+# Answer: 47
 
-def recursive_path_finder(map, location_x, location_y, walls, height, width, path_length):
-
-    #End condition (Success and Failure)
-    if (location_x == width-1 and location_y == height-1 and walls >= 1):
-        print(path_length)
-
-    #Move Down
-    if (location_y < height-1):
-        if(map[location_y][location_x] == 0):
-            recursive_path_finder(map, location_x, location_y+1, walls, height, width, path_length+1)
-    if (location_x < width-1):
-        if(map[location_y][location_x] == 0):
-            recursive_path_finder(map, location_x+1, location_y, walls, height, width, path_length+1)
-
-    if (location_y < height-1):
-        if(map[location_y][location_x] == 1 and walls == 0):
-            recursive_path_finder(map, location_x, location_y+1, walls+1, height, width, path_length+1)
-    if (location_x < width-1):
-        if(map[location_y][location_x] == 1 and walls == 0):
-            recursive_path_finder(map, location_x+1, location_y, walls+1, height, width, path_length+1)
-
-
-    #Move Left
-    if (location_x > 1):
-        if(map[location_y][location_x] == 0):
-            recursive_path_finder(map, location_x-1, location_y, walls, height, width, path_length+1)
-        elif(map[location_y][location_x] == 1 and walls == 0):
-            recursive_path_finder(map, location_x-1, location_y, walls+1, height, width), path_length+1
-
-
-    #Move Up
-    if (location_y > 1):
-        if(map[location_y][location_x] == 0):
-            recursive_path_finder(map, location_x, location_y-1, walls, height, width, path_length+1)
-        if(map[location_y][location_x] == 1 and walls == 0):
-            recursive_path_finder(map, location_x, location_y-1, walls+1, height, width, path_length+1)
-
-solution([[0, 1, 1, 0], [0, 0, 0, 1], [1, 1, 0, 0], [1, 1, 1, 0]])
-
+# solution([
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+#     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+# ])
+# Answer: 31
