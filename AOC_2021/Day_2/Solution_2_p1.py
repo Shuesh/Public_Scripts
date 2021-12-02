@@ -1,6 +1,7 @@
 def main():
-    elevation_list = Input_to_List('Day_1/Input_1.txt')
-    print()
+    instruction_list = Input_to_List('Day_2/Input_2.txt')
+    depth, h_pos = Change_Position(instruction_list)
+    print(depth * h_pos)
 
 
 def Input_to_List(path):
@@ -10,12 +11,25 @@ def Input_to_List(path):
     return_list = []
 
     while (line != ''):
-        return_list.append(int(line.strip()))
+        return_list.append(line.strip())
         line = file.readline()
 
     return return_list
 
 
+def Change_Position(instruction_list):
+    depth = 0
+    h_pos = 0
+
+    for instruction in instruction_list:
+        if (instruction[0] == 'f'):
+            h_pos += int(instruction[-1])
+        elif (instruction[0] == 'u'):
+            depth -= int(instruction[-1])
+        elif (instruction[0] == 'd'):
+            depth += int(instruction[-1])
+
+    return depth, h_pos
 
 
 if __name__ == '__main__':
