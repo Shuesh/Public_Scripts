@@ -1,31 +1,80 @@
-def main():
-    input_list = Input_to_List('Day_4/Example_4.txt')
-    output = Function(input_list)
-    print(output)
+import re
 
+def main():
+    call_order, boards = Input_to_List('Day_4/Input_4.txt')
+    marked_boards = [[[False for _ in range(len(boards[0][0]))] for _ in range(len(boards[0]))] for _ in range(len(boards))]
+    winner = False
+    winning_board = None
+
+    for number in call_order:
+        final_number = number
+        for index,board in enumerate(boards):
+            marked_boards[index] = Update_Boards(board, marked_boards[index], number)
+            winner = Win_Check(marked_boards[index])
+            if (winner):
+                winning_board = index
+                break
+        if (winner):
+            break
+    total = Calculate(boards[winning_board], marked_boards[winning_board])
+    print(total * int(final_number))
 
 def Input_to_List(path):
+    match_string = r"\d+"
+
     file = open(path, 'r')
+    call_order = re.findall(match_string,file.readline())
     line = file.readline()
+    end_board = False
 
     return_list = []
+    matrix = []
 
-    while (line != ''):
-        return_list.append(line.strip())
-        line = file.readline()
+    while True:
+        next_line = file.readline()
+        line = re.findall(match_string, next_line)
 
-    return return_list
+        if not next_line:
+            return_list.append(matrix)
+            break
 
-def Function(input_list):
-    pass
+        else:
+            if(end_board):
+                return_list.append(matrix)
+                matrix = [line]
+                end_board = False
+            else:
+                if(line == []):
+                    end_board = True
+                else:
+                    matrix.append(line)
 
-# for binary STRINGS
-def Convert_to_Decimal(binary):
-    total =  0
-    length = len(binary)
+    return call_order, return_list
 
-    for index,digit in enumerate(binary):
-        total += int(digit) * 2 ** (length - index - 1)
+
+def Update_Boards(board, marked_board, number):
+    for row_index,row in enumerate(board):
+        for term_index,term in enumerate(row):
+            if (term == number):
+                marked_board[row_index][term_index] = True
+                return marked_board
+    return marked_board
+    
+def Win_Check(board):
+    for row in board:
+        if (False not in row):
+            return True
+    for column in range(len(board[0])):
+        if (board[0][column] == True and board[1][column] == True and board[2][column] == True and board[3][column] == True and board[4][column] == True):
+            return True
+    return False
+
+def Calculate(board, marked_board):
+    total = 0
+    for row_index,row in enumerate(board):
+        for term_index, term in enumerate(row):
+            if marked_board[row_index][term_index] == False:
+                total += int(term)
 
     return total
 
