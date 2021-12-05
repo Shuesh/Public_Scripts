@@ -3,7 +3,7 @@ import re
 def main():
     max_size = 1000
 
-    input_list = Input_to_List('Day_5/Input_5.txt')
+    input_list = Input_to_List('Day_6/Example_6.txt')
     vent_map = [[0 for _ in range(max_size)] for _ in range(max_size)]
     vent_map = Draw_Lines(input_list, vent_map)
     count = Count_Overlaps(vent_map)
