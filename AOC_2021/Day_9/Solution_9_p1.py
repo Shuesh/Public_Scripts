@@ -1,7 +1,7 @@
 import re
 
 def main():
-    cave_list = Input_to_List('Day_8/Input_8.txt')
+    cave_list = Input_to_List('Day_9/Input_9.txt')
     lows = Find_Lows(cave_list)
     risk_total = Risk_Levels(lows)
     print(risk_total)    
