@@ -73,7 +73,7 @@ def Coordinate_Map(coordinate_list):
 
 
 
-#For when the crease runs horizontally
+#For when the crease runs horizontally (the fold direction is vertical)
 def Fold_Vertical(coordinate_map, fold_line):
 
     #excludes the fold line
@@ -87,6 +87,7 @@ def Fold_Vertical(coordinate_map, fold_line):
     return new_list
 
 
+#For when the crease runs vertically (the fold direction is horizontal)
 def Fold_Horizontal(coordinate_map, fold_line):
     new_list = [['.' for _ in range(len(coordinate_map[:][:fold_line]))] for __ in range(len(coordinate_map))]
 
