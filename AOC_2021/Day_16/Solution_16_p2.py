@@ -3,7 +3,7 @@ import copy
 
 
 def main():
-    binary_string = Input_to_List('Day_16/Example_p2_1_16.txt')
+    binary_string = Input_to_List('Day_16/Input_16.txt')
     version_sum = Recursive_Packet(binary_string)
     print(version_sum)
 
@@ -79,8 +79,8 @@ def Get_Length_Type(packet):
         return 11
 
 
+#Type 4
 def Literal(packet):
-    version = Get_Version(packet)
     start = 6
     end = 11
     packet_number = 1
@@ -96,80 +96,114 @@ def Literal(packet):
     data.append(subpacket[1:])
 
     endpoint = 6 + 5*packet_number
-    # while endpoint % 4 != 0:
-    #     endpoint += 1
     
-    return version, endpoint
+    data_string = ''
+    for term in data:
+        data_string += term
+    
+    return data_string, endpoint
+
 
 
 def Operator(packet):
-    version_total = Get_Version(packet)
+    packet_type = Get_Type(packet)
     length_type = Get_Length_Type(packet)
     
     #total length of subpackets in bits
     if (length_type == 15):
         bit_length = Bin_to_Dec(packet[7:22])
-        version, endpoint = Parse_Subpackets_bits(packet[22:22+bit_length])
-        version_total += version
+        data, endpoint = Parse_Subpackets_bits(packet[22:22+bit_length])
         endpoint_total = 22 + endpoint
 
     #total number of subpackets immediately contained in this packet
     else:
         num_subpackets = Bin_to_Dec(packet[7:18])
-        version, endpoint = Parse_Subpackets_Count(packet[18:], num_subpackets)
-        version_total += version
+        data, endpoint = Parse_Subpackets_Count(packet[18:], num_subpackets)
         endpoint_total = 18 + endpoint
 
-    return version_total, endpoint_total
+    for index,term in enumerate(data):
+        if type(term) is not int:
+            data[index] = Bin_to_Dec(term)
+
+    total = 0
+    #Type 0
+    if packet_type == 0:
+        for subpacket in data:
+            total += subpacket
+    #Type 1
+    elif packet_type == 1:
+        total = 1
+        for subpacket in data:
+            total *= subpacket
+    #Type 2
+    elif packet_type == 2:
+        total = min(data)
+    #Type 3
+    elif packet_type == 3:
+        total = max(data)
+    #Type 5
+    elif packet_type == 5:
+        if data[0] > data[1]:
+            total = 1
+        else:
+            total = 0
+    #Type 6
+    elif packet_type == 6:
+        if data[0] < data[1]:
+            total = 1
+        else:
+            total = 0
+    #Type 7
+    elif packet_type == 7:
+        if data[0] == data[1]:
+            total = 1
+        else:
+            total = 0
+
+    return total, endpoint_total
 
 
 def Parse_Subpackets_bits(packet):
-    version_total = 0
     endpoint_total = 0
     end_points = []
-    versions = []
+    data = []
     types = []
     
     while packet:
         current_type = Get_Type(packet)
         types.append(current_type)
         if current_type == 4:
-            version, endpoint = Literal(packet)
-            versions.append(version)
+            data_term, endpoint = Literal(packet)
+            data.append(data_term)
         else:
-            version, endpoint = Operator(packet)
-            versions.append(version)
+            data_term, endpoint = Operator(packet)
+            data.append(data_term)
         
         end_points.append(endpoint)
         packet = packet[endpoint:]
-
-    
-    for term in versions:
-        version_total += term
     
     for term in end_points:
         endpoint_total += term
 
-    return version_total, endpoint_total
+    return data, endpoint_total
 
 
 def Parse_Subpackets_Count(packet, num_packets):
-    version_total = 0
     endpoint_total = 0
     packet_count = 0
     end_points = []
-    versions = []
+    data = []
     types = []
     
     while packet and packet_count < num_packets:
         current_type = Get_Type(packet)
         types.append(current_type)
         if current_type == 4:
-            version, endpoint = Literal(packet)
-            versions.append(version)
+            data_term, endpoint = Literal(packet)
+            data.append(data_term)
         else:
-            version, endpoint = Operator(packet)
-            versions.append(version)
+            data_term, endpoint = Operator(packet)
+            data.append(data_term)
 
         packet_count += 1
         
@@ -177,13 +211,10 @@ def Parse_Subpackets_Count(packet, num_packets):
         packet = packet[endpoint:]
 
 
-    for term in versions:
-        version_total += term
-
     for term in end_points:
         endpoint_total += term
 
-    return version_total, endpoint_total
+    return data, endpoint_total
 
 
 def Recursive_Packet(packet):
