@@ -4,8 +4,8 @@ import copy
 
 def main():
     binary_string = Input_to_List('Day_16/Input_16.txt')
-    version_sum = Recursive_Packet(binary_string)
-    print(version_sum)
+    packet_total = Recursive_Packet(binary_string)
+    print(packet_total)
 
 
 def Input_to_List(path):
@@ -78,7 +78,6 @@ def Get_Length_Type(packet):
     else:
         return 11
 
-
 #Type 4
 def Literal(packet):
     start = 6
@@ -103,8 +102,7 @@ def Literal(packet):
     
     return data_string, endpoint
 
-
-
+#All other types
 def Operator(packet):
     packet_type = Get_Type(packet)
     length_type = Get_Length_Type(packet)
