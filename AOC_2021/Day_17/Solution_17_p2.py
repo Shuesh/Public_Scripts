@@ -1,95 +1,71 @@
 import re
 import copy
 
-
+#Example: target area: x=20..30, y=-10..-5
+#Input: target area: x=111..161, y=-154..-101
 def main():
-    chiton_grid = Input_to_List('Day_15/Input_15.txt')
-    expanded_grid = Expand_Map(chiton_grid)
-    length = Width_Recursive_Search(expanded_grid)
-    print(length)
-    
+    #Example
+    target_zone_definition = [[20,-10], [30,-5]]
+    #Input
+    # target_zone_definition = [[111,-154],[161,-101]]
 
+    x_range = [target_zone_definition[0][0], target_zone_definition[1][0]]
+    y_range = [target_zone_definition[0][1], target_zone_definition[1][1]]
 
-def Input_to_List(path):
+    minimum_x, maximum_x = X_Limits(x_range)
+    x_velocities = X_Velocities(minimum_x, maximum_x, x_range)
+    minimum_y, maximum_y = Y_Limits(y_range)
+    y_velocities = Y_Velocities(minimum_y, maximum_y, y_range)
 
-    match_string = r"\d"
+#Finds the minimum and maximum starting x velocities that will hit within the range
+def X_Limits(x_range):
 
-    file = open(path, 'r')
-    line = file.readline().strip()
-    row = list(map(int,re.findall(match_string, line)))
+    maximum_x = x_range[1]
 
-    return_list = []
+    x_coord = 0
+    x_velocity = 0
+    x_velocities = []
 
-
-    while True:
-        if not line:
+    while x_coord < x_range[1]:
+        x_coord += x_velocity
+        x_velocity += 1
+        if x_coord >= x_range[0] and x_coord <= x_range[1]:
+            minimum_x = x_velocity
             break
-        else:
-            return_list.append(row)
-            line = file.readline().strip()
-            row = list(map(int,re.findall(match_string, line)))
-            
-    return return_list
+
+    return minimum_x, maximum_x
 
 
-def Expand_Map(chiton_grid):
-    expanded_grid = []
+#Uses the limits found above and finds which initial velocities in the range have points within the range
+def X_Velocities(minimum_x, maximum_x, x_range):
 
-    for i in range(5):
-        for row_idx, row in enumerate(chiton_grid):
-            expanded_row = []
-            for j in range(5):
-                for term in row:
-                    number = term + i + j
-                    if number > 9:
-                        number -= 9
-                    expanded_row.append(number)
-            expanded_grid.append(expanded_row)
+    x_velocities = []
 
-    return expanded_grid
+    for x in range(minimum_x, maximum_x+1):
+        x_velocity = x
+        x_coord = 0
+        while x_coord < x_range[1]:
+            x_coord += x_velocity
+            x_velocity -= 1
+            if x_coord <= maximum_x and x_coord >= minimum_x:
+                x_velocities.append([x,x-x_velocity])
+                break
+
+    return x_velocities
+
+
+#x_velocity is in the following form: x_velocity, step_where_it's_in_range
+def Y_Limits(y_range, x_velocity):
+    maximum_y = y_range[0] - 1
 
 
 
-def Width_Recursive_Search (chiton_grid):
 
-    distance_grid = [[None for _ in range(len(chiton_grid[0]))] for __ in range(len(chiton_grid))]
-    distance_grid[0][0] = 0
+def Y_Velocities(minimum_y, maximum_y, y_range):
+    pass
 
-    queue = [[0,0]]
-
-    while queue:
-        coordinate = queue.pop(0)
-        #up
-        if coordinate[0] > 0:
-            up_length = distance_grid[coordinate[0]][coordinate[1]] + chiton_grid[coordinate[0]-1][coordinate[1]]
-            if distance_grid[coordinate[0]-1][coordinate[1]] == None or up_length < distance_grid[coordinate[0]-1][coordinate[1]]:
-                distance_grid[coordinate[0]-1][coordinate[1]] = up_length
-                queue.append([coordinate[0]-1,coordinate[1]])
-        #down
-        if coordinate[0] < len(chiton_grid)-1:
-            down_length = distance_grid[coordinate[0]][coordinate[1]] + chiton_grid[coordinate[0]+1][coordinate[1]]
-            if distance_grid[coordinate[0]+1][coordinate[1]] == None or down_length < distance_grid[coordinate[0]+1][coordinate[1]]:
-                distance_grid[coordinate[0]+1][coordinate[1]] = down_length
-                queue.append([coordinate[0]+1,coordinate[1]])
-        #left
-        if coordinate[1] > 0:
-            left_length = distance_grid[coordinate[0]][coordinate[1]] + chiton_grid[coordinate[0]][coordinate[1]-1]
-            if distance_grid[coordinate[0]][coordinate[1]-1] == None or left_length < distance_grid[coordinate[0]][coordinate[1]-1]:
-                distance_grid[coordinate[0]][coordinate[1]-1] = left_length
-                queue.append([coordinate[0],coordinate[1]-1])
-        #right
-        if coordinate[1] < len(chiton_grid[0])-1:
-            right_length = distance_grid[coordinate[0]][coordinate[1]] + chiton_grid[coordinate[0]][coordinate[1]+1]
-            if distance_grid[coordinate[0]][coordinate[1]+1] == None or right_length < distance_grid[coordinate[0]][coordinate[1]+1]:
-                distance_grid[coordinate[0]][coordinate[1]+1] = right_length
-                queue.append([coordinate[0],coordinate[1]+1])
-
-    return distance_grid[len(chiton_grid)-1][len(chiton_grid[0])-1]
 
 
 if __name__ == '__main__':
     main()
-
-
-
 
