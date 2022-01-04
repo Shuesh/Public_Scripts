@@ -1,31 +1,45 @@
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
 
 from numpy.core.defchararray import isdigit
 
 s_parameter_enum = 2
 freq_unit = 'MHz'
 
+
 def Main():
-    input_format, input_headings, sparam_list = Input_to_list(input('snp full path:\n').strip())
-    attenuation_magnitudes = Attenuation_snp(input_headings, input_format[2], sparam_list)
-    Plot_attenuation(attenuation_magnitudes)
-    
-    low_freq = None
-    high_freq = None
-    while(type(low_freq) is not float):
-        try: 
-            low_freq = float(input(f'Low end of frequency range in {freq_unit} (e notation is valid ex: 4.8e9): '))
-        except ValueError:
-            print('That wasn\'t a valid number. Please try again\n')
-    while(type(high_freq) is not float):
-        try:
-            high_freq = float(input(f'High end of frequency range in {freq_unit} (e notation is valid ex: 4.8e9): '))
-        except ValueError:
-            print('That wasn\'t a valid number. Please try again\n')
-    Range_stats(low_freq, high_freq, attenuation_magnitudes)
-    input('\nPress enter to exit')
+    print('Please select the S Parameter file you\'d like to convert')
+    try:
+        input_format, input_headings, sparam_list = Input_to_list(Gui_file_path().strip())
+        attenuation_magnitudes = Attenuation_snp(input_headings, input_format[2], sparam_list)
+        Plot_attenuation(attenuation_magnitudes)
+        
+        low_freq = None
+        high_freq = None
+        while(type(low_freq) is not float):
+            try: 
+                low_freq = float(input(f'Low end of frequency range in {freq_unit} (e notation is valid ex: 4.8e9): '))
+            except ValueError:
+                print('That wasn\'t a valid number. Please try again\n')
+        while(type(high_freq) is not float):
+            try:
+                high_freq = float(input(f'High end of frequency range in {freq_unit} (e notation is valid ex: 4.8e9): '))
+            except ValueError:
+                print('That wasn\'t a valid number. Please try again\n')
+        Range_stats(low_freq, high_freq, attenuation_magnitudes)
+        input('\nPress enter to exit')
+    except:
+        print("Exception occurred. Exiting.")
+
+
+def Gui_file_path():
+    Tk().withdraw()
+    filename = askopenfilename()
+    return filename
+
 
 def Input_to_list(path):
     #find_start_pattern = r'^(?![#|!|\s]).*/gm'
@@ -76,6 +90,7 @@ def Input_to_list(path):
     freq_unit = input_format[0]
     return input_format, input_headings, sparam_list
 
+
 def Attenuation_snp(headings, snp_format, sparameters): #j at the end of a number is complex/imaginary
     number_of_ports = np.sqrt(len(headings)) - 1   #input/output port order is not consistent. Check headings
     
@@ -103,7 +118,8 @@ def Attenuation_snp(headings, snp_format, sparameters): #j at the end of a numbe
     else:
         print('Format error. Please edit to include one of the following input formats: RI, MA, DB')
     
-#D:\TDK_LPF_Measured\20210914\4800.s2p   
+
+
 def Plot_attenuation(sparam_magnitudes):
     #one_port = ['S11']
     #two_port = ['S11','S21','S12','S22']
@@ -117,6 +133,7 @@ def Plot_attenuation(sparam_magnitudes):
     plt.ylabel('dB')
     plt.title('Attenuation')
     plt.show(block=False)
+
 
 def Range_stats(low_freq, high_freq, attenuations):
     low_index = 0
@@ -151,4 +168,5 @@ def Range_stats(low_freq, high_freq, attenuations):
     print(f'\nStatistics between {low_freq} {freq_unit} and {high_freq} {freq_unit}:\nMin: {min} @ {min_freq} {freq_unit}\nMax: {max} @ {max_freq} {freq_unit}\nAverage Power: {power_avg}')
 
 
-Main()
+if __name__ == '__main__':
+    Main()
