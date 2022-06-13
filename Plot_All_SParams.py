@@ -4,6 +4,9 @@ import tkinter.filedialog as fd
 import matplotlib.pyplot as plt
 
 
+# Tutorials for scikit-rf
+# https://scikit-rf.readthedocs.io/en/latest/tutorials/index.html
+
 def Main():
     print('Please select the S Parameter file(s) you\'d like to plot')
     try:
